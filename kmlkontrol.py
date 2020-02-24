@@ -17,13 +17,18 @@ import os
 from pykml import parser
 from lxml import etree
 import copy
+from pykml.factory import KML_ElementMaker as KML
+from pykml.factory import GX_ElementMaker as KML
+from pykml.parser import Schema
+schema_gx = Schema("kml22gx.xsd")
+schema_ogc = Schema("ogckml22.xsd")
 
 dir_kml = 'E:\\Works\\T\\Google_Earth\\'
 ext_kml = ['.kml']
 dir_project_def = 'E:\\Works\\T\\Google_Earth\\'
 ext_project_def = ['.pro']
 dir_project = 'E:\\Works\\T\\Google_Earth\\Project\\'
-ext_project = ['.kml']
+ext_project = '.kml'
 
 #(name='.', max_lat=90, min_lat=-90, max_lon=180, min_lon=-180, npoints=0, points=[])
 class project_obj:
@@ -194,6 +199,21 @@ def geo_filter_by_coords(project, verbose = -1):
     project.coords = copy.deepcopy(t_coords)
     return project
 
+def write_KML(projects, dir_project, ext_project):
+    headtxt = '<Folder xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:atom="http://www.w3.org/2005/Atom" xmlns="http://www.opengis.net/kml/2.2">'
+    endtxt = '</Folder>'
+    for ipl, pl in enumerate(projects):
+        for ip, p in enumerate(pl):    
+            outtxt = ''
+            for ipt, pt in enumerate(p.points):
+                outtxt = outtxt+pt
+            outtxt = headtxt+outtxt+endtxt
+            if not os.path.isdir(dir_project):
+                os.makedirs(dir_project)
+            fname = dir_project + p.name + ext_project
+            with open(fname, 'w') as outfile:
+                outfile.write(headtxt+outtxt+endtxt)
+
 if __name__ == '__main__':
     kml_file_names = find_files(dir_kml, ext_kml)
     project_file_names = find_files(dir_project_def, ext_project_def)
@@ -218,8 +238,8 @@ if __name__ == '__main__':
     # dir()
     # .keys()
     # kml1.Document.getchildren()[25].countchildren() = 101
-    fnames = kml_file_names[0:10]
-    #fnames = kml_file_names
+    #fnames = kml_file_names[0:10]
+    fnames = kml_file_names
     # One per project file
     for ipl, pl in enumerate(projects):
         # One per project entry in a project file
@@ -239,9 +259,20 @@ if __name__ == '__main__':
             projects[ipl][ip].coords = get_coords(projects[ipl][ip].points)
             projects[ipl][ip] = geo_filter_by_coords(projects[ipl][ip], verbose = 1)
 
-
-
-
+    write_KML(projects, dir_project, ext_project)
+#    Folder = GX.Folder(parser.fromstring(projects[0][0].points[0]))
+    #p1 = KML.Placemark(etree.fromstring(projects[0][0].points[0]))
+    #folder = KML.folder(KML.name('KML_Import'), KML.altitudeMode('clampToGround'))
+#    folder.append(KML.Placemark(projects[0][0].points[1]))
+    #doc = KML.kml(folder)
+    #folder = GX.folder()
+    #doc = KML.kml(KML.name('this'))
+    #print('\nSchema validates? '+str(schema_gx.validate(doc)))
+    #name_object = KML.name("Hello World!")
+    #print('\nSchema validates? '+str(schema_ogc.validate(doc)))
+#    with open('testfile.kml', 'wb') as outfile:
+#        outfile.write(etree.tostring(folder))
+#        # .decode('utf-8')
 
 
 
